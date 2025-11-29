@@ -317,6 +317,7 @@ header{
 @media screen and (max-width: 768px) {
   .container__cover {
     flex-direction: column;
+    
     text-align: center;
     height: auto;
     padding: 5em 1em;
@@ -325,6 +326,7 @@ header{
 
   .text__cover h1 {
     font-size: 1.7em;
+    
   }
 
   .text__cover p {
@@ -343,5 +345,4 @@ header{
     padding: 0 1.5em;
   }
 }
-
 
