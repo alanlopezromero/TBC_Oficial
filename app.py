@@ -107,6 +107,24 @@ def panel_director():
         mensajes=mensajes
     )
 
+@app.route('/eliminar-mensaje/<int:mensaje_id>', methods=['POST'])
+def eliminar_mensaje(mensaje_id):
+    if not session.get('director_logueado'):
+        return redirect(url_for('login_director'))
+
+    try:
+        conn = sqlite3.connect('mensajes.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM mensajes WHERE id = ?', (mensaje_id,))
+        conn.commit()
+        conn.close()
+        flash("Mensaje eliminado correctamente.", "success")
+    except Exception as e:
+        flash(f"Error al eliminar mensaje: {e}", "error")
+
+    return redirect(url_for('panel_director'))
+
+
 @app.route('/subir-imagen-general', methods=['POST'])
 def subir_imagen_general():
     if not session.get('director_logueado'):
