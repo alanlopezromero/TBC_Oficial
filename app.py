@@ -5,6 +5,8 @@ import sqlite3
 import cloudinary
 import cloudinary.uploader
 
+from urllib.parse import unquote
+
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_segura'
 
@@ -118,7 +120,6 @@ def panel_director():
     )
 
 
-from urllib.parse import unquote
 
 @app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
