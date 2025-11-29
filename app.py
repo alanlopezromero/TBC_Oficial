@@ -77,41 +77,38 @@ def panel_director():
     if not session.get('director_logueado'):
         return redirect(url_for('login_director'))
 
-    # Manejar POST si quieres eliminar mensajes desde aquí
-    if request.method == 'POST':
-        mensaje_id = request.form.get('mensaje_id')
-        if mensaje_id:
-            try:
-                conn = sqlite3.connect('mensajes.db')
-                cursor = conn.cursor()
-                cursor.execute('DELETE FROM mensajes WHERE id=?', (mensaje_id,))
-                conn.commit()
-                conn.close()
-                flash("Mensaje eliminado correctamente.", 'success')
-            except Exception as e:
-                flash(f"Error al eliminar mensaje: {e}", 'error')
-        return redirect(url_for('panel_director'))
-
-    # Obtener imágenes directamente desde Cloudinary por categoría
+    # -------------------------------
+    # Imágenes por categoría desde Cloudinary
+    # -------------------------------
     imagenes_por_categoria = {}
-    for categoria_key in CATEGORIAS:
-        resultado = cloudinary.api.resources(type='upload', prefix=f'galeria/{categoria_key}')
-        imagenes = []
-        for item in resultado['resources']:
-            imagenes.append({
-                'url': item['secure_url'],
-                'public_id': item['public_id'],
-                'descripcion': item.get('context', {}).get('custom', {}).get('descripcion', '')
-            })
-        imagenes_por_categoria[categoria_key] = imagenes
 
-    # Cargar mensajes desde la base de datos
+    for categoria_key in CATEGORIAS:
+        urls = []
+        try:
+            resultado = cloudinary.Search().expression(f'folder:galeria/{categoria_key}').execute()
+            for item in resultado['resources']:
+                url = item['secure_url']
+                public_id = item['public_id']
+                # Descripción almacenada en Cloudinary context
+                descripcion = item.get('context', {}).get('custom', {}).get('caption', '')
+                urls.append((url, public_id, descripcion))
+        except Exception as e:
+            flash(f"Error al cargar imágenes de {CATEGORIAS[categoria_key]}: {e}", 'error')
+
+        imagenes_por_categoria[categoria_key] = urls
+
+    # -------------------------------
+    # Mensajes de alumnos
+    # -------------------------------
     conn = sqlite3.connect('mensajes.db')
     cursor = conn.cursor()
     cursor.execute('SELECT id, nombre, correo, contenido FROM mensajes')
     mensajes = cursor.fetchall()
     conn.close()
 
+    # -------------------------------
+    # Renderizar template
+    # -------------------------------
     return render_template(
         'panel_director.html',
         categorias=CATEGORIAS,
@@ -177,6 +174,7 @@ def subir_imagen_general():
         flash(f'Error al subir imagen: {e}', 'error')
 
     return redirect(url_for('panel_director'))
+
 
 
 
