@@ -72,40 +72,51 @@ def login_director():
 
     return render_template('login_director.html')
 
-
 @app.route('/panel/director', methods=['GET', 'POST'])
 def panel_director():
     if not session.get('director_logueado'):
         return redirect(url_for('login_director'))
 
+    # -------------------------------
+    # Imágenes por categoría desde Cloudinary
+    # -------------------------------
     imagenes_por_categoria = {}
 
     for categoria_key in CATEGORIAS:
         urls = []
-        archivo = f'datos_{categoria_key}.txt'  # archivo con clave sin espacios ni mayúsculas
-        if os.path.exists(archivo):
-            with open(archivo, 'r', encoding='utf-8') as f:
-                for linea in f:
-                    partes = linea.strip().split('|')
-                    if len(partes) == 3:
-                        urls.append((partes[0], partes[1], partes[2]))  # url, public_id, descripcion
-                    elif len(partes) == 2:
-                        urls.append((partes[0], partes[1], ''))
+        try:
+            resultado = cloudinary.Search().expression(f'folder:galeria/{categoria_key}').execute()
+            for item in resultado['resources']:
+                url = item['secure_url']
+                public_id = item['public_id']
+                # Descripción almacenada en Cloudinary context
+                descripcion = item.get('context', {}).get('custom', {}).get('caption', '')
+                urls.append((url, public_id, descripcion))
+        except Exception as e:
+            flash(f"Error al cargar imágenes de {CATEGORIAS[categoria_key]}: {e}", 'error')
+
         imagenes_por_categoria[categoria_key] = urls
 
-    # Carga mensajes si tienes
+    # -------------------------------
+    # Mensajes de alumnos
+    # -------------------------------
     conn = sqlite3.connect('mensajes.db')
     cursor = conn.cursor()
     cursor.execute('SELECT id, nombre, correo, contenido FROM mensajes')
     mensajes = cursor.fetchall()
     conn.close()
 
+    # -------------------------------
+    # Renderizar template
+    # -------------------------------
     return render_template(
         'panel_director.html',
         categorias=CATEGORIAS,
         imagenes_por_categoria=imagenes_por_categoria,
-        mensajes=mensajes
+        mensajes=mensajes,
+        avisos=AVISOS
     )
+
 
 @app.route('/eliminar-mensaje/<int:mensaje_id>', methods=['POST'])
 def eliminar_mensaje(mensaje_id):
@@ -123,7 +134,6 @@ def eliminar_mensaje(mensaje_id):
         flash(f"Error al eliminar mensaje: {e}", "error")
 
     return redirect(url_for('panel_director'))
-
 
 @app.route('/subir-imagen-general', methods=['POST'])
 def subir_imagen_general():
@@ -143,45 +153,25 @@ def subir_imagen_general():
         return redirect(url_for('panel_director'))
 
     try:
-        resultado = cloudinary.uploader.upload(archivo, folder=f'galeria/{categoria_key}')
-        url = resultado['secure_url']
-        public_id = resultado['public_id']
-
-        with open(f'datos_{categoria_key}.txt', 'a', encoding='utf-8') as f:
-            f.write(f'{url}|{public_id}|{descripcion}\n')
-
+        resultado = cloudinary.uploader.upload(
+            archivo,
+            folder=f'galeria/{categoria_key}',
+            context=f'caption={descripcion}'
+        )
         flash(f'Imagen subida correctamente a {CATEGORIAS[categoria_key]}.', 'success')
     except Exception as e:
         flash(f'Error al subir imagen: {e}', 'error')
 
     return redirect(url_for('panel_director'))
 
-
-
-@app.route('/eliminar-imagen/<categoria_key>/<path:public_id>', methods=['POST'])
+@app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
-    if categoria_key not in CATEGORIAS:
-        flash('Categoría no válida.', 'error')
-        return redirect(url_for('panel_director'))
-
     try:
         cloudinary.uploader.destroy(public_id)
+        flash("Imagen eliminada correctamente.", 'success')
     except Exception as e:
         flash(f"Error al eliminar de Cloudinary: {e}", 'error')
-        return redirect(url_for('panel_director'))
 
-    archivo = f'datos_{categoria_key}.txt'
-    if os.path.exists(archivo):
-        lineas = []
-        with open(archivo, 'r', encoding='utf-8') as f:
-            lineas = f.readlines()
-
-        with open(archivo, 'w', encoding='utf-8') as f:
-            for linea in lineas:
-                if public_id not in linea:
-                    f.write(linea)
-
-    flash("Imagen eliminada correctamente.", 'success')
     return redirect(url_for('panel_director'))
 
 
