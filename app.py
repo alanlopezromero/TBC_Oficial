@@ -118,8 +118,11 @@ def panel_director():
     )
 
 
+from urllib.parse import unquote
+
 @app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
+    public_id = unquote(public_id)  # Decodifica los caracteres especiales
     try:
         cloudinary.uploader.destroy(public_id)
         flash("Imagen eliminada correctamente.", 'success')
@@ -127,6 +130,7 @@ def eliminar_imagen(categoria_key, public_id):
         flash(f"Error al eliminar la imagen: {e}", 'error')
 
     return redirect(url_for('panel_director'))
+
 
 
 @app.route('/eliminar-mensaje/<int:mensaje_id>', methods=['POST'])
