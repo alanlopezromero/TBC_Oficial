@@ -140,7 +140,7 @@ def subir_imagen_general():
 
 
 
-@app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
+@app.route('/eliminar-imagen/<categoria_key>/<path:public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
     if categoria_key not in CATEGORIAS:
         flash('Categoría no válida.', 'error')

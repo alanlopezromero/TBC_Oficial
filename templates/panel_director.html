@@ -81,9 +81,12 @@
           <small><strong>{{ descripcion }}</strong></small><br>
         {% endif %}
 
-        <form action="{{ url_for('eliminar_imagen', categoria_key=key, public_id=public_id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta imagen?');">
-          <button type="submit">Eliminar</button>
-        </form>
+      <form action="{{ url_for('eliminar_imagen', categoria_key=key, public_id=public_id) }}" 
+      method="POST" 
+      onsubmit="return confirm('¿Seguro que deseas eliminar esta imagen?');">
+    <button type="submit">Eliminar</button>
+</form>
+
       </div>
     {% endfor %}
   </div>
