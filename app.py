@@ -74,38 +74,43 @@ def login_director():
 
     return render_template('login_director.html')
 
-@app.route('/panel/director')
+@app.route('/panel/director', methods=['GET', 'POST'])
 def panel_director():
     if not session.get('director_logueado'):
         return redirect(url_for('login_director'))
 
+    # -------------------------------
+    # Imágenes por categoría desde Cloudinary
+    # -------------------------------
     imagenes_por_categoria = {}
 
     for categoria_key in CATEGORIAS:
-        imagenes = []
-        # Trae todas las imágenes dentro de la carpeta de la categoría
-        resultado = cloudinary.api.resources(
-            type='upload',
-            prefix=f'galeria/{categoria_key}',
-            max_results=500  # ajusta según cuántas imágenes esperes
-        )
+        urls = []
+        try:
+            resultado = cloudinary.Search().expression(f'folder:galeria/{categoria_key}').execute()
+            for item in resultado['resources']:
+                url = item['secure_url']
+                public_id = item['public_id']
+                # Descripción almacenada en Cloudinary context
+                descripcion = item.get('context', {}).get('custom', {}).get('caption', '')
+                urls.append((url, public_id, descripcion))
+        except Exception as e:
+            flash(f"Error al cargar imágenes de {CATEGORIAS[categoria_key]}: {e}", 'error')
 
-        for item in resultado['resources']:
-            imagenes.append({
-                'url': item['secure_url'],
-                'public_id': item['public_id'],
-                'descripcion': item.get('context', {}).get('custom', {}).get('descripcion', '')
-            })
+        imagenes_por_categoria[categoria_key] = urls
 
-        imagenes_por_categoria[categoria_key] = imagenes
-
-    # Cargar mensajes desde la base de datos
+    # -------------------------------
+    # Mensajes de alumnos
+    # -------------------------------
     conn = sqlite3.connect('mensajes.db')
     cursor = conn.cursor()
     cursor.execute('SELECT id, nombre, correo, contenido FROM mensajes')
     mensajes = cursor.fetchall()
     conn.close()
 
+    # -------------------------------
+    # Renderizar template
+    # -------------------------------
     return render_template(
         'panel_director.html',
         categorias=CATEGORIAS,
@@ -116,7 +121,7 @@ def panel_director():
 
 
 
-@app.route('/eliminar-imagen/<categoria_key>/<path:public_id>', methods=['POST'])
+@app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
     public_id = unquote(public_id)  # Decodifica los caracteres especiales
     try:
@@ -126,7 +131,6 @@ def eliminar_imagen(categoria_key, public_id):
         flash(f"Error al eliminar la imagen: {e}", 'error')
 
     return redirect(url_for('panel_director'))
-
 
 
 
