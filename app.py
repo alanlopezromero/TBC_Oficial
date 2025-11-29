@@ -71,15 +71,30 @@ def login_director():
             return render_template('login_director.html', error=error)
 
     return render_template('login_director.html')
-@app.route('/panel/director', methods=['GET'])
+
+@app.route('/panel/director', methods=['GET', 'POST'])
 def panel_director():
     if not session.get('director_logueado'):
         return redirect(url_for('login_director'))
 
+    # Manejar POST si quieres eliminar mensajes desde aquí
+    if request.method == 'POST':
+        mensaje_id = request.form.get('mensaje_id')
+        if mensaje_id:
+            try:
+                conn = sqlite3.connect('mensajes.db')
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM mensajes WHERE id=?', (mensaje_id,))
+                conn.commit()
+                conn.close()
+                flash("Mensaje eliminado correctamente.", 'success')
+            except Exception as e:
+                flash(f"Error al eliminar mensaje: {e}", 'error')
+        return redirect(url_for('panel_director'))
+
     # Obtener imágenes directamente desde Cloudinary por categoría
     imagenes_por_categoria = {}
     for categoria_key in CATEGORIAS:
-        # Buscar imágenes en Cloudinary dentro de la carpeta de la categoría
         resultado = cloudinary.api.resources(type='upload', prefix=f'galeria/{categoria_key}')
         imagenes = []
         for item in resultado['resources']:
@@ -104,6 +119,7 @@ def panel_director():
         mensajes=mensajes,
         avisos=AVISOS
     )
+
 
 @app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
