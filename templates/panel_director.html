@@ -81,7 +81,7 @@
           <small><strong>{{ descripcion }}</strong></small><br>
         {% endif %}
 
-       <form action="{{ url_for('eliminar_imagen', categoria_key=key, public_id=public_id.split('/')[-1]) }}" method="POST">
+      <form action="{{ url_for('eliminar_imagen', categoria_key=key, public_id=public_id.replace('/', '---')) }}" method="POST">
 
         </form>
       </div>
