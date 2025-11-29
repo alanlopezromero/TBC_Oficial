@@ -55,8 +55,7 @@
     {% for id, nombre, correo, contenido in mensajes %}
       <li>
         <strong>{{ nombre }}</strong> ({{ correo }}): {{ contenido }}
-        <form action="{{ url_for('panel_director') }}" method="POST" style="display:inline;">
-          <input type="hidden" name="mensaje_id" value="{{ id }}">
+        <form action="{{ url_for('eliminar_mensaje', mensaje_id=id) }}" method="POST" style="display:inline;">
           <button type="submit" onclick="return confirm('¿Eliminar este mensaje?')">Eliminar</button>
         </form>
       </li>
@@ -73,19 +72,19 @@
 {% for key, nombre in categorias.items() %}
   <h3>{{ nombre }}</h3>
   <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-    {% for url, public_id, descripcion in imagenes_por_categoria[key] %}
+    {% for imagen in imagenes_por_categoria[key] %}
       <div style="border: 1px solid #ccc; padding: 10px; text-align: center; width: 160px;">
-        <img src="{{ url }}" alt="Imagen" width="150"><br>
+        <img src="{{ imagen['url'] }}" alt="Imagen" width="150"><br>
 
-        {% if descripcion %}
-          <small><strong>{{ descripcion }}</strong></small><br>
+        {% if imagen['descripcion'] %}
+          <small><strong>{{ imagen['descripcion'] }}</strong></small><br>
         {% endif %}
 
-      <form action="{{ url_for('eliminar_imagen', categoria_key=key, public_id=public_id) }}" 
-      method="POST" 
-      onsubmit="return confirm('¿Seguro que deseas eliminar esta imagen?');">
-    <button type="submit">Eliminar</button>
-</form>
+        <form action="{{ url_for('eliminar_imagen', categoria_key=key, public_id=imagen['public_id']|urlencode) }}" 
+              method="POST" 
+              onsubmit="return confirm('¿Seguro que deseas eliminar esta imagen?');">
+          <button type="submit">Eliminar</button>
+        </form>
 
       </div>
     {% endfor %}

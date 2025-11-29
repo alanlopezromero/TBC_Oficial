@@ -164,7 +164,7 @@ def subir_imagen_general():
 
     return redirect(url_for('panel_director'))
 
-@app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
+@app.route('/eliminar-imagen/<categoria_key>/<path:public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
     try:
         cloudinary.uploader.destroy(public_id)
@@ -173,6 +173,7 @@ def eliminar_imagen(categoria_key, public_id):
         flash(f"Error al eliminar de Cloudinary: {e}", 'error')
 
     return redirect(url_for('panel_director'))
+
 
 
 
