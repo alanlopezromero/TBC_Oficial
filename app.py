@@ -57,7 +57,7 @@ def galeria_categoria(categoria):
     
     return render_template('galeria_categoria.html', imagenes=imagenes, categoria=categoria, categorias=CATEGORIAS)
 
-
+#-----Contraseña de  director------------
 
 @app.route('/login/director', methods=['GET', 'POST'])
 def login_director():
