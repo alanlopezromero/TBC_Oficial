@@ -65,7 +65,7 @@ def login_director():
         usuario = request.form['usuario']
         contraseña = request.form['contraseña']
 
-        if usuario == 'TBC' and contraseña == '1234':
+        if usuario == 'TBC' and contraseña == 'alan':
             session['director_logueado'] = True
             return redirect(url_for('panel_director'))
         else:
