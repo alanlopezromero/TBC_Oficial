@@ -184,13 +184,11 @@ def subir_imagen_general():
         cloudinary.uploader.upload(
             archivo,
             folder=f'galeria/{categoria_key}',
-            context={
-                "custom": {
-                    "caption": descripcion
-                }
-            }
+            context=f'caption={descripcion}'   # 👈 ASÍ DEBE IR
         )
+
         flash('Imagen subida correctamente.', 'success')
+
     except Exception as e:
         flash(f'Error al subir imagen: {e}', 'error')
 
