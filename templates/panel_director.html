@@ -1,139 +1,131 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Panel del Director</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+<body class="admin-body">
 
-<body>
+  <div class="admin-container">
 
-<div class="panel">
+    <h1 class="admin-title">Panel del Director</h1>
 
-  <!-- Barra superior -->
-  <div class="top-bar">
-    <h1>Panel del Director</h1>
-    <a href="{{ url_for('logout') }}" class="logout">Cerrar sesión</a>
+    <a href="{{ url_for('logout') }}" class="admin-logout">Cerrar sesión</a>
+
+    <!-- =========================
+         SUBIR IMAGEN
+    ========================= -->
+    <div class="admin-section">
+      <h2>Subir imagen a una categoría</h2>
+
+      <form class="admin-form"
+            action="{{ url_for('subir_imagen_general') }}"
+            method="POST"
+            enctype="multipart/form-data">
+
+        <label>Selecciona categoría:</label>
+        <select name="categoria" required>
+          {% for key, nombre in categorias.items() %}
+            <option value="{{ key }}">{{ nombre }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Selecciona imagen:</label>
+        <input type="file" name="imagen" accept="image/*" required>
+
+        <label>Descripción:</label>
+        <input type="text" name="descripcion"
+               placeholder="Ej: Evento de ciencia"
+               maxlength="100">
+
+        <button type="submit">Subir imagen</button>
+      </form>
+    </div>
+
+    <!-- =========================
+         AVISOS
+    ========================= -->
+    <div class="admin-section">
+      <h2>Agregar aviso</h2>
+
+      <form class="admin-form" action="{{ url_for('agregar_aviso') }}" method="POST">
+        <input type="text" name="aviso" placeholder="Nuevo aviso..." required>
+        <button type="submit">Agregar aviso</button>
+      </form>
+
+      {% if avisos %}
+        <ul class="admin-list">
+          {% for aviso in avisos %}
+            <li>
+              {{ aviso }}
+              <form class="inline-form"
+                    action="{{ url_for('eliminar_aviso', indice=loop.index0) }}"
+                    method="POST">
+                <button type="submit"
+                        onclick="return confirm('¿Eliminar este aviso?')">
+                  Eliminar
+                </button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <!-- =========================
+         MENSAJES
+    ========================= -->
+    <div class="admin-section">
+      <h2>Mensajes enviados por alumnos</h2>
+
+      {% if mensajes %}
+        <ul class="admin-list">
+          {% for id, nombre, correo, contenido in mensajes %}
+            <li>
+              <span>
+                <strong>{{ nombre }}</strong> ({{ correo }}): {{ contenido }}
+              </span>
+              <form class="inline-form"
+                    action="{{ url_for('eliminar_mensaje', mensaje_id=id) }}"
+                    method="POST">
+                <button type="submit"
+                        onclick="return confirm('¿Eliminar este mensaje?')">
+                  Eliminar
+                </button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No hay mensajes.</p>
+      {% endif %}
+    </div>
+
+    <!-- =========================
+         GALERÍA
+    ========================= -->
+    <div class="admin-section">
+      <h2>Imágenes por categoría</h2>
+
+      {% for key, nombre in categorias.items() %}
+        <h3>{{ nombre }}</h3>
+
+        <div class="admin-gallery">
+          {% for imagen in imagenes_por_categoria[key] %}
+            <div class="admin-image-card">
+              <img src="{{ imagen['url'] }}" alt="Imagen">
+
+              {% if imagen['descripcion'] %}
+                <small class="descripcion">{{ imagen['descripcion'] }}</small>
+              {% endif %}
+
+              <form action="{{ url_for('eliminar_imagen',
+                                      categoria_key=key,
+                                      public_id=imagen['public_id']|urlencode) }}"
+                    method="POST"
+                    onsubmit="return confirm('¿Seguro que deseas eliminar esta imagen?');">
+                <button type="submit">Eliminar</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
   </div>
-
-  <!-- Subir imagen -->
-  <div class="box">
-    <h2>Subir imagen a una categoría</h2>
-
-    <form action="{{ url_for('subir_imagen_general') }}"
-          method="POST"
-          enctype="multipart/form-data"
-          class="form">
-
-      <label>Categoría</label>
-      <select name="categoria" required>
-        {% for key, nombre in categorias.items() %}
-          <option value="{{ key }}">{{ nombre }}</option>
-        {% endfor %}
-      </select>
-
-      <label>Imagen</label>
-      <input type="file" name="imagen" accept="image/*" required>
-
-      <label>Descripción</label>
-      <input type="text"
-             name="descripcion"
-             placeholder="Ej: Evento de ciencia"
-             maxlength="100">
-
-      <button type="submit" class="btn-primary">Subir imagen</button>
-    </form>
-  </div>
-
-  <!-- Avisos -->
-  <div class="box">
-    <h2>Avisos</h2>
-
-    <form action="{{ url_for('agregar_aviso') }}" method="POST" class="form-inline">
-      <input type="text" name="aviso" placeholder="Nuevo aviso..." required>
-      <button type="submit" class="btn-primary">Agregar</button>
-    </form>
-
-    {% if avisos %}
-      <ul class="list">
-        {% for aviso in avisos %}
-          <li class="list-item">
-            {{ aviso }}
-            <form action="{{ url_for('eliminar_aviso', indice=loop.index0) }}"
-                  method="POST"
-                  class="inline-form">
-              <button type="submit"
-                      class="btn-danger"
-                      onclick="return confirm('¿Eliminar este aviso?')">
-                Eliminar
-              </button>
-            </form>
-          </li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  </div>
-
-  <!-- Mensajes -->
-  <div class="box">
-    <h2>Mensajes de alumnos</h2>
-
-    {% if mensajes %}
-      <ul class="list">
-        {% for id, nombre, correo, contenido in mensajes %}
-          <li class="list-item">
-            <strong>{{ nombre }}</strong> ({{ correo }}): {{ contenido }}
-
-            <form action="{{ url_for('eliminar_mensaje', mensaje_id=id) }}"
-                  method="POST"
-                  class="inline-form">
-              <button type="submit"
-                      class="btn-danger"
-                      onclick="return confirm('¿Eliminar este mensaje?')">
-                Eliminar
-              </button>
-            </form>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="empty">No hay mensajes.</p>
-    {% endif %}
-  </div>
-
-  <!-- Imágenes -->
-  <div class="box">
-    <h2>Imágenes por categoría</h2>
-
-    {% for key, nombre in categorias.items() %}
-      <h3>{{ nombre }}</h3>
-
-      <div class="imagenes">
-        {% for imagen in imagenes_por_categoria[key] %}
-          <div class="imagen-box">
-            <img src="{{ imagen['url'] }}" alt="Imagen">
-
-            {% if imagen['descripcion'] %}
-              <small class="descripcion">
-                {{ imagen['descripcion'] }}
-              </small>
-            {% endif %}
-
-            <form action="{{ url_for('eliminar_imagen',
-                  categoria_key=key,
-                  public_id=imagen['public_id']|urlencode) }}"
-                  method="POST"
-                  class="form-delete"
-                  onsubmit="return confirm('¿Eliminar esta imagen?');">
-              <button type="submit" class="btn-danger">Eliminar</button>
-            </form>
-          </div>
-        {% endfor %}
-      </div>
-    {% endfor %}
-  </div>
-
-</div>
 
 </body>
-</html>
