@@ -76,45 +76,41 @@ def login_director():
 
 @app.route('/panel_director')
 def panel_director():
-    # -------------------------------
-    # Cargar mensajes
-    # -------------------------------
-    conn = sqlite3.connect('mensajes.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, correo, contenido FROM mensajes")
-    mensajes = cursor.fetchall()
-    conn.close()
+    if not session.get('director_logueado'):
+        return redirect(url_for('login_director'))
 
-    # -------------------------------
-    # Cargar imágenes por categoría
-    # -------------------------------
     imagenes_por_categoria = {}
 
     for categoria_key in CATEGORIAS:
-        lista = []
+        imagenes_por_categoria[categoria_key] = []
         try:
-            resultado = cloudinary.Search().expression(
-                f'folder:galeria/{categoria_key}'
-            ).execute()
+            resultado = cloudinary.Search() \
+                .expression(f'folder:galeria/{categoria_key}') \
+                .execute()
 
-            for item in resultado['resources']:
-                lista.append({
-                    'url': item['secure_url'],
-                    'public_id': item['public_id'],
-                    'descripcion': (
-                        item.get('context', {})
-                            .get('custom', {})
-                            .get('caption', '')
-                    )
+            for item in resultado.get('resources', []):
+                descripcion = (
+                    item.get("context", {})
+                        .get("custom", {})
+                        .get("caption", "")
+                )
+
+                imagenes_por_categoria[categoria_key].append({
+                    "url": item["secure_url"],
+                    "public_id": item["public_id"],
+                    "descripcion": descripcion
                 })
+
         except Exception as e:
-            flash(f"Error al cargar imágenes: {e}", "error")
+            flash(f"Error cargando imágenes: {e}", "error")
 
-        imagenes_por_categoria[categoria_key] = lista
+    # mensajes
+    conn = sqlite3.connect('mensajes.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, nombre, correo, contenido FROM mensajes')
+    mensajes = cursor.fetchall()
+    conn.close()
 
-    # -------------------------------
-    # Renderizar template
-    # -------------------------------
     return render_template(
         'panel_director.html',
         categorias=CATEGORIAS,
@@ -124,15 +120,13 @@ def panel_director():
     )
 
 
-
-@app.route('/eliminar-imagen/<categoria_key>/<public_id>', methods=['POST'])
+@app.route('/eliminar-imagen/<categoria_key>/<path:public_id>', methods=['POST'])
 def eliminar_imagen(categoria_key, public_id):
-    public_id = unquote(public_id)  # Decodifica los caracteres especiales
     try:
         cloudinary.uploader.destroy(public_id)
-        flash("Imagen eliminada correctamente.", 'success')
+        flash("Imagen eliminada correctamente.", "success")
     except Exception as e:
-        flash(f"Error al eliminar la imagen: {e}", 'error')
+        flash(f"Error al eliminar la imagen: {e}", "error")
 
     return redirect(url_for('panel_director'))
 
@@ -154,7 +148,6 @@ def eliminar_mensaje(mensaje_id):
         flash(f"Error al eliminar mensaje: {e}", "error")
 
     return redirect(url_for('panel_director'))
-
 @app.route('/subir-imagen-general', methods=['POST'])
 def subir_imagen_general():
     if not session.get('director_logueado'):
@@ -162,7 +155,7 @@ def subir_imagen_general():
 
     categoria_key = request.form.get('categoria')
     archivo = request.files.get('imagen')
-    descripcion = request.form.get('descripcion', '').strip().replace('|', '')
+    descripcion = request.form.get('descripcion', '').strip()
 
     if categoria_key not in CATEGORIAS:
         flash('Categoría no válida.', 'error')
@@ -173,13 +166,16 @@ def subir_imagen_general():
         return redirect(url_for('panel_director'))
 
     try:
-        resultado = cloudinary.uploader.upload(
+        cloudinary.uploader.upload(
             archivo,
             folder=f'galeria/{categoria_key}',
-            context={"caption": descripcion}
-
+            context={
+                "custom": {
+                    "caption": descripcion
+                }
+            }
         )
-        flash(f'Imagen subida correctamente a {CATEGORIAS[categoria_key]}.', 'success')
+        flash('Imagen subida correctamente.', 'success')
     except Exception as e:
         flash(f'Error al subir imagen: {e}', 'error')
 
