@@ -74,43 +74,43 @@ def login_director():
 
     return render_template('login_director.html')
 
-@app.route('/panel/director', methods=['GET', 'POST'])
+@app.route('/panel_director')
 def panel_director():
-    if not session.get('director_logueado'):
-        return redirect(url_for('login_director'))
+    # -------------------------------
+    # Cargar mensajes
+    # -------------------------------
+    conn = sqlite3.connect('mensajes.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombre, correo, contenido FROM mensajes")
+    mensajes = cursor.fetchall()
+    conn.close()
 
     # -------------------------------
-    # Imágenes por categoría desde Cloudinary
+    # Cargar imágenes por categoría
     # -------------------------------
     imagenes_por_categoria = {}
 
     for categoria_key in CATEGORIAS:
-        urls = []
+        lista = []
         try:
-            resultado = cloudinary.Search().expression(f'folder:galeria/{categoria_key}').execute()
+            resultado = cloudinary.Search().expression(
+                f'folder:galeria/{categoria_key}'
+            ).execute()
+
             for item in resultado['resources']:
-                url = item['secure_url']
-                public_id = item['public_id']
-                # Descripción almacenada en Cloudinary context
-                descripcion = item.get('context', {}).get('custom', {}).get('caption', '') 
-                urls.append({
-    "url": url,
-    "public_id": public_id,
-    "descripcion": descripcion
-})
+                lista.append({
+                    'url': item['secure_url'],
+                    'public_id': item['public_id'],
+                    'descripcion': (
+                        item.get('context', {})
+                            .get('custom', {})
+                            .get('caption', '')
+                    )
+                })
         except Exception as e:
-            flash(f"Error al cargar imágenes de {CATEGORIAS[categoria_key]}: {e}", 'error')
+            flash(f"Error al cargar imágenes: {e}", "error")
 
-        imagenes_por_categoria[categoria_key] = urls
-
-    # -------------------------------
-    # Mensajes de alumnos
-    # -------------------------------
-    conn = sqlite3.connect('mensajes.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT id, nombre, correo, contenido FROM mensajes')
-    mensajes = cursor.fetchall()
-    conn.close()
+        imagenes_por_categoria[categoria_key] = lista
 
     # -------------------------------
     # Renderizar template
@@ -176,7 +176,8 @@ def subir_imagen_general():
         resultado = cloudinary.uploader.upload(
             archivo,
             folder=f'galeria/{categoria_key}',
-            context=f'caption={descripcion}'
+            context={"caption": descripcion}
+
         )
         flash(f'Imagen subida correctamente a {CATEGORIAS[categoria_key]}.', 'success')
     except Exception as e:
