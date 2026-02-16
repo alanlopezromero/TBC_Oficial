@@ -92,8 +92,12 @@ def panel_director():
                 url = item['secure_url']
                 public_id = item['public_id']
                 # Descripción almacenada en Cloudinary context
-                descripcion = item.get('context', {}).get('custom', {}).get('caption', '')
-                urls.append((url, public_id, descripcion))
+                descripcion = item.get('context', {}).get('custom', {}).get('caption', '') 
+                urls.append({
+    "url": url,
+    "public_id": public_id,
+    "descripcion": descripcion
+})
         except Exception as e:
             flash(f"Error al cargar imágenes de {CATEGORIAS[categoria_key]}: {e}", 'error')
 
