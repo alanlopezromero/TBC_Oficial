@@ -38,24 +38,38 @@ def galeria():
 
 @app.route('/galeria/<categoria>')
 def galeria_categoria(categoria):
-    categoria = categoria.strip()
+    if categoria not in CATEGORIAS:
+        return redirect(url_for('galeria'))
+
     imagenes = []
-    archivo = f'datos_{categoria}.txt'
-    
-    if os.path.exists(archivo):
-        with open(archivo, 'r', encoding='utf-8') as f:
-            for linea in f:
-                try:
-                    partes = linea.strip().split('|')
-                    if len(partes) >= 2:
-                        descripcion = partes[2] if len(partes) > 2 else ''
-                        imagenes.append((partes[0], descripcion))
-                    elif len(partes) == 1:
-                        imagenes.append((partes[0], ''))
-                except Exception as e:
-                    print(f"Error procesando línea: {linea} - {e}")
-    
-    return render_template('galeria_categoria.html', imagenes=imagenes, categoria=categoria, categorias=CATEGORIAS)
+
+    try:
+        resultado = cloudinary.Search() \
+            .expression(f'folder:galeria/{categoria}') \
+            .execute()
+
+        for item in resultado.get('resources', []):
+            descripcion = (
+                item.get("context", {})
+                    .get("custom", {})
+                    .get("caption", "")
+            )
+
+            imagenes.append({
+                "url": item["secure_url"],
+                "descripcion": descripcion
+            })
+
+    except Exception as e:
+        print("Error galería:", e)
+
+    return render_template(
+        'galeria_categoria.html',
+        imagenes=imagenes,
+        categoria=categoria,
+        categorias=CATEGORIAS
+    )
+
 
 #-----Contraseña de  director------------
 
@@ -148,6 +162,7 @@ def eliminar_mensaje(mensaje_id):
         flash(f"Error al eliminar mensaje: {e}", "error")
 
     return redirect(url_for('panel_director'))
+
 @app.route('/subir-imagen-general', methods=['POST'])
 def subir_imagen_general():
     if not session.get('director_logueado'):

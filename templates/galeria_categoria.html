@@ -5,17 +5,27 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
   <h1>Galería de {{ categorias[categoria] }}</h1>
   <a href="/">Volver al inicio</a>
+
   <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-    {% for url, descripcion in imagenes %}
+    {% for imagen in imagenes %}
       <div style="margin: 10px; max-width: 220px; text-align: center;">
-        <img src="{{ url }}" width="200" alt="Imagen"><br>
-        {% if descripcion %}
-          <p style="font-weight: bold; margin-top: 5px;">{{ descripcion }}</p>
+        <img src="{{ imagen.url }}" width="200" alt="Imagen"><br>
+
+        {% if imagen.descripcion %}
+          <p style="font-weight: bold; margin-top: 5px;">
+            {{ imagen.descripcion }}
+          </p>
         {% endif %}
       </div>
     {% endfor %}
   </div>
+
+  {% if not imagenes %}
+    <p>No hay imágenes en esta categoría.</p>
+  {% endif %}
+
 </body>
 </html>
