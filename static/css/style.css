@@ -346,3 +346,126 @@ header{
   }
 }
 
+/* ============================
+   PANEL ADMINISTRADOR
+============================ */
+
+.admin-body {
+  background: #f9fafb;
+  font-family: system-ui, sans-serif;
+  color: #111827;
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px;
+}
+
+.admin-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #16a34a;
+  margin-bottom: 20px;
+}
+
+.admin-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.admin-section h2 {
+  margin-top: 0;
+  color: #16a34a;
+  border-bottom: 2px solid #dcfce7;
+  padding-bottom: 8px;
+}
+
+/* Formularios */
+.admin-form label {
+  display: block;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.admin-form input,
+.admin-form select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  margin-top: 5px;
+}
+
+.admin-form button {
+  margin-top: 15px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-form button:hover {
+  background: #15803d;
+}
+
+/* Avisos y mensajes */
+.admin-list li {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Galería admin */
+.admin-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.admin-image-card {
+  width: 170px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+}
+
+.admin-image-card img {
+  width: 150px;
+  border-radius: 8px;
+}
+
+.admin-image-card button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.admin-image-card button:hover {
+  background: #b91c1c;
+}
+
+/* Cerrar sesión */
+.admin-logout {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: #111827;
+  font-weight: 600;
+}
